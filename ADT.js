@@ -27,7 +27,7 @@ if (!window.ADT) {
         proto = new List([
                 new List(["_type", "adt"]),
                 new List(["__do", ADT.__do]),
-                new List(["_morph", lisp`(call (get __do) (this [object]) "toString" (list))`])
+                new List(["_morph", parseLisp(`(call (get __do) (this [object]) "toString" (list))`)])
             ]);
         static
         init(cls) {
