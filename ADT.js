@@ -13,11 +13,14 @@ if (!window.ADT) {
             super([]);
             this.add(new List(["...", this.constructor.proto]));
         }
+        toString(){
+            return "<"+this.lookup("_type")+">"
+        }
         static
         __do(self, action, args) {
             if (!(self instanceof ADT))
                 throw new Error("expecting a js defined adt but got a " + Process.prototype.reportTypeOf(self));
-            if (List.prototype[action])
+            if (self[action] == List.prototype[action])
                 throw new Error("cannot call list methods directly");
             return self[action](...args.itemsArray()) ?? '';
         }
