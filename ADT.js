@@ -10,7 +10,8 @@ if (!window.ADT) {
     }
     class ADT extends List {
         constructor() {
-            super([new List(["...", this.constructor.proto])]);
+            super([]);
+            this.add(new List(["...", this.constructor.proto]));
         }
         static
         __do(self, action, args) {
