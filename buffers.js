@@ -34,7 +34,7 @@
                 return idx.map(v=>this.get_be(type,v));
             return this._view["get"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))](idx-1,false);
         }
-        
+
         set(type,idx,val){
             return Buffer.isLe ? this.set_le(type,idx,val) : this.set_be(type,idx,val);
         }
@@ -43,6 +43,8 @@
                 return this.set_le(String(type),idx,val);
             if(idx instanceof List)
                 return idx.map(v=>this.set_le(type,v,val));
+            if(val instanceof List)
+                return idx.map((v,i)=>this.set_le(type,idx+i,v));
             return this._view["get"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))](idx-1,val,true);
         }
         set_be(type,idx,val){
@@ -50,6 +52,8 @@
                 return this.set_be(String(type),idx,val);
             if(idx instanceof List)
                 return idx.map(v=>this.set_be(type,v,val));
+            if(val instanceof List)
+                return idx.map((v,i)=>this.set_be(type,idx+i,v));
             return this._view["get"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))](idx-1,val,false);
         }
 
