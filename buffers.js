@@ -75,5 +75,5 @@
             return `<buffer of length ${this.byteLength()}>`
         }
     }
-    ADT.initialize(Buffer);
+    ADT.init(Buffer);
 })()
