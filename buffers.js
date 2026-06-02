@@ -64,7 +64,7 @@
         export(fileName){
             let fileReader = new FileReader();
             fileReader.addEventListener("loadend",data=>{
-                IDE_Morph.prototype.saveFileAs(fileReader.result,'application/octet-stream',fileName);
+                IDE_Morph.prototype.saveFileAs(fileReader.result,'application/',fileName);
             })
             fileReader.readAsDataURL(new Blob([this._bytes],{type:'application/octet-stream'}));
         }
