@@ -7,7 +7,7 @@
         constructor(size=1024){
             super();
             this._bytes = 
-                Process.prototype.reportTypeof(size) == "number" ? 
+                Process.prototype.reportTypeOf(size) == "number" ? 
                     new ArrayBuffer(Number(size)) : 
                         size instanceof ArrayBuffer ? size :
                         (()=>{throw new Error("expecting an ArrayBuffer but got "+size)});
