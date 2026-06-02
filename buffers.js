@@ -77,4 +77,92 @@
     }
     ADT.init(Buffer);
     window.Buffer = Buffer;
+    
+    SnapExtensions.primitives.set(
+        'buf_new(count)',
+        function(count){
+            return new Buffer(count);
+        }
+    )
+    
+    //credit to the Snap! devs for the original version of this function
+    SnapExtensions.primitives.set(
+        'buf_import',
+        function (proc) {
+            // raw is a Boolean flag selecting to keep the data unparsed
+            var ide = this.parentThatIsA(IDE_Morph),
+                wrld = ide.world(),
+                acc = proc.context.accumulator,
+                inp;
+    
+            function userImport() {
+    
+    
+                function readText(aFile) {
+                    var frd = new FileReader(),
+                        ext = aFile.name.split('.').pop().toLowerCase();
+    
+                    function isType(aFile, string) {
+                        return aFile.type.indexOf(string) !== -1 ||
+                            (ext === string);
+                    }
+    
+                    frd.onloadend = function (e) {
+                        acc.data = new Buffer(e.target.result);
+                    };
+    
+                    frd.readAsArrayBuffer(aFile);
+                }
+    
+                document.body.removeChild(inp);
+                ide.filePicker = null;
+                if (inp.files.length > 0) {
+                    readText(inp.files[inp.files.length - 1]);
+                }
+            }
+    
+            if (!acc) {
+                acc = proc.context.accumulator = {
+                    data: null
+                };
+                if (ide.filePicker) {
+                    document.body.removeChild(ide.filePicker);
+                    ide.filePicker = null;
+                }
+                inp = document.createElement('input');
+                inp.type = 'file';
+                inp.style.color = "transparent";
+                inp.style.backgroundColor = "transparent";
+                inp.style.border = "none";
+                inp.style.outline = "none";
+                inp.style.position = "absolute";
+                inp.style.top = "0px";
+                inp.style.left = "0px";
+                inp.style.width = wrld.width() + 'px';
+                inp.style.height = wrld.height() + 'px';
+                inp.addEventListener(
+                    "change",
+                    userImport,
+                    false
+                );
+                inp.addEventListener(
+                    "cancel",
+                    () => {
+                        acc.data = '';
+                        document.body.removeChild(inp);
+                        ide.filePicker = null;
+                    },
+                    false
+                );
+                document.body.appendChild(inp);
+                ide.filePicker = inp;
+                inp.click();
+            } else if (acc.data !== null) {
+                return acc.data;
+            }
+            proc.pushContext('doYield');
+            proc.pushContext();
+        }
+    );
+
 })()
