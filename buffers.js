@@ -76,4 +76,5 @@
         }
     }
     ADT.init(Buffer);
+    window.Buffer = Buffer;
 })()
