@@ -45,7 +45,7 @@
                 return idx.map(v=>this.set_le(type,v,val));
             if(val instanceof List)
                 return idx.map((v,i)=>this.set_le(type,idx+i,v));
-            return this._view["get"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))](idx-1,val,true);
+            return this._view["set"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))](idx-1,val,true);
         }
         set_be(type,idx,val){
             if(typeof type !== 'string')
@@ -54,7 +54,7 @@
                 return idx.map(v=>this.set_be(type,v,val));
             if(val instanceof List)
                 return idx.map((v,i)=>this.set_be(type,idx+i,v));
-            return this._view["get"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))](idx-1,val,false);
+            return this._view["set"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))](idx-1,val,false);
         }
 
         slice(start,end){
