@@ -44,7 +44,7 @@
             if(idx instanceof List)
                 return idx.map(v=>this.set_le(type,v,val));
             if(val instanceof List)
-                return val.map((v,i)=>this.set_le(type,idx+i,v));
+                return val.map((v,i)=>this.set_le(type,idx+i*Number(type.slice(1))/8,v));
             return this._view["set"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))](idx-1,val,true);
         }
         set_be(type,idx,val){
@@ -53,7 +53,7 @@
             if(idx instanceof List)
                 return idx.map(v=>this.set_be(type,v,val));
             if(val instanceof List)
-                return val.map((v,i)=>this.set_be(type,idx+i,v));
+                return val.map((v,i)=>this.set_be(type,idx+i*Number(type.slice(1))/8,v));
             return this._view["set"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))](idx-1,val,false);
         }
 
