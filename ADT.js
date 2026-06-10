@@ -27,7 +27,7 @@ if (!window.ADT) {
         proto = new List([
                 new List(["_type", "adt"]),
                 new List(["__do", ADT.__do]),
-                new List(["_morph", lisp`(call (get __do) (this [object]) "toString" (list))`])
+                new List(["_morph", parseLisp(`(call (get __do) (this [object]) "toString" (list))`)])
             ]);
         static
         getInputNames(funct){
@@ -48,7 +48,7 @@ if (!window.ADT) {
                 if(level==1)
                     result+=stringified[i];
             }
-            return result.split(',').map(v=>String([...v.matchAll(/[a-zA-Z0-9_]+/g)][0]));
+            return result.split(',').map(v=>String([...v.matchAll(/[a-zA-Z0-9_]+/g)][0])).filter(v=>v!=="");
         }
         static
         init(cls) {
