@@ -68,5 +68,5 @@
             (report (get result))
         )`)))
     })()
-    window.ProcessWrapper = ProcessWrapper
+    window.PromiseWrapper = PromiseWrapper
 })()
