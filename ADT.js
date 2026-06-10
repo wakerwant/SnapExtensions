@@ -48,7 +48,7 @@ if (!window.ADT) {
                 if(level==1)
                     result+=stringified[i];
             }
-            return result.split(',').map(v=>String([...v.matchAll(/[a-zA-Z0-9_]+/g)][0])).filter(v=>v!=="");
+            return result.split(',').map(v=>String([...v.matchAll(/[a-zA-Z0-9_]+/g)][0])).filter(v=>v!==""&&v!=="undefined");
         }
         static
         init(cls) {
