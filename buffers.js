@@ -38,7 +38,7 @@
             if(typeof type !== 'string')
                 return this.getAtomic(String(type),idx);
             let cls = window[{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))+"Array"];
-            function get(idx){
+            let get = (idx)=>{
                 if(idx instanceof List)
                     return idx.map(get);
                 return Atomics.load(new cls(this._bytes,Number(idx)-1,1),0);
@@ -52,7 +52,7 @@
             if(typeof type !== 'string')
                 return this.get_le(String(type),idx);
             let method = this._view["get"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))];
-            function get(idx){
+            let get = (idx)=>{
                 if(idx instanceof List)
                     return idx.map(get);
                 return method.call(this._view,Number(idx)-1,true);
@@ -63,7 +63,7 @@
             if(typeof type !== 'string')
                 return this.get_be(String(type),idx);
             let method = this._view["get"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))];
-            function get(idx){
+            let get = (idx)=>{
                 if(idx instanceof List)
                     return idx.map(get);
                 return method.call(this._view,Number(idx)-1,false);
@@ -78,7 +78,7 @@
                 return this.setAtomic(String(type),idx,val);
             let size = Number(type.slice(1))/8;
             let cls = window[{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))+"Array"];
-            function set(idx,val){
+            let set = (idx,val)=>{
                 if(idx instanceof List && val instanceof List){
                     let maxIdx = Math.min(idx.length(),val.length());
                     let idxA = idx.itemsArray();
@@ -103,7 +103,7 @@
                 return this.set_le(String(type),idx,val);
             let size = Number(type.slice(1))/8;
             let cls = window[{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))+"Array"];
-            function set(idx,val){
+            let set = (idx,val)=>{
                 if(idx instanceof List && val instanceof List){
                     let maxIdx = Math.min(idx.length(),val.length());
                     let idxA = idx.itemsArray();
@@ -128,7 +128,7 @@
                 return this.andAtomic(String(type),idx,val);
             let size = Number(type.slice(1))/8;
             let cls = window[{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))+"Array"];
-            function set(idx,val){
+            let set = (idx,val)=>{
                 if(idx instanceof List && val instanceof List){
                     let maxIdx = Math.min(idx.length(),val.length());
                     let idxA = idx.itemsArray();
@@ -153,7 +153,7 @@
                 return this.orAtomic(String(type),idx,val);
             let size = Number(type.slice(1))/8;
             let cls = window[{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))+"Array"];
-            function set(idx,val){
+            let set = (idx,val)=>{
                 if(idx instanceof List && val instanceof List){
                     let maxIdx = Math.min(idx.length(),val.length());
                     let idxA = idx.itemsArray();
@@ -178,7 +178,7 @@
                 return this.xorAtomic(String(type),idx,val);
             let size = Number(type.slice(1))/8;
             let cls = window[{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))+"Array"];
-            function set(idx,val){
+            let set = (idx,val)=>{
                 if(idx instanceof List && val instanceof List){
                     let maxIdx = Math.min(idx.length(),val.length());
                     let idxA = idx.itemsArray();
@@ -203,8 +203,9 @@
         set_le(type,idx,val){
             if(typeof type !== 'string')
                 return this.set_le(String(type),idx,val);
+            let size = Number(type.slice(1))/8;
             let method = this._view["set"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))];
-            function set(idx,val){
+            let set = (idx,val)=>{
                 if(idx instanceof List && val instanceof List){
                     let maxIdx = Math.min(idx.length(),val.length());
                     let idxA = idx.itemsArray();
@@ -217,7 +218,7 @@
                 if(idx instanceof List)
                     return idx.itemsArray().forEach(v=>set(v,val));
                 if(val instanceof List)
-                    return val.itemsArray().forEach(v=>set(idx,v));
+                    return val.itemsArray().forEach((v,i)=>set(idx+i*size,v));
                 return method.call(this._view,Number(idx)-1,Number(val),true);
             }
             return set(idx,val);
@@ -225,8 +226,9 @@
         set_be(type,idx,val){
             if(typeof type !== 'string')
                 return this.set_be(String(type),idx,val);
+            let size = Number(type.slice(1))/8;
             let method = this._view["set"+{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))];
-            function set(idx,val){
+            let set = (idx,val)=>{
                 if(idx instanceof List && val instanceof List){
                     let maxIdx = Math.min(idx.length(),val.length());
                     let idxA = idx.itemsArray();
@@ -239,7 +241,7 @@
                 if(idx instanceof List)
                     return idx.itemsArray().forEach(v=>set(v,val));
                 if(val instanceof List)
-                    return val.itemsArray().forEach(v=>set(idx,v));
+                    return val.itemsArray().forEach((v,i)=>set(idx+i*size,v));
                 return method.call(this._view,Number(idx)-1,Number(val),false);
             }
             return set(idx,val);
