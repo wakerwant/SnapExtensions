@@ -91,7 +91,7 @@
                 if(idx instanceof List)
                     return idx.itemsArray().forEach(v=>set(v,val));
                 if(val instanceof List)
-                    return idx.itemsArray().forEach((v,i)=>set(idx+i*size,v));
+                    return val.itemsArray().forEach((v,i)=>set(idx+i*size,v));
                 return Atomics.store(new cls(this._bytes,Number(idx)-1,1),0,Number(val));
             }
             return set(idx,val);
@@ -116,7 +116,7 @@
                 if(idx instanceof List)
                     return idx.itemsArray().forEach(v=>set(v,val));
                 if(val instanceof List)
-                    return idx.itemsArray().forEach((v,i)=>set(idx+i*size,v));
+                    return val.itemsArray().forEach((v,i)=>set(idx+i*size,v));
                 return Atomics.add(new cls(this._bytes,Number(idx)-1,1),0,Number(val));
             }
             return set(idx,delta);
@@ -141,7 +141,7 @@
                 if(idx instanceof List)
                     return idx.itemsArray().forEach(v=>set(v,val));
                 if(val instanceof List)
-                    return idx.itemsArray().forEach((v,i)=>set(idx+i*size,v));
+                    return val.itemsArray().forEach((v,i)=>set(idx+i*size,v));
                 return Atomics.and(new cls(this._bytes,Number(idx)-1,1),0,Number(val));
             }
             return set(idx,val);
@@ -166,7 +166,7 @@
                 if(idx instanceof List)
                     return idx.itemsArray().forEach(v=>set(v,val));
                 if(val instanceof List)
-                    return idx.itemsArray().forEach((v,i)=>set(idx+i*size,v));
+                    return val.itemsArray().forEach((v,i)=>set(idx+i*size,v));
                 return Atomics.or(new cls(this._bytes,Number(idx)-1,1),0,Number(val));
             }
             return set(idx,val);
@@ -191,7 +191,7 @@
                 if(idx instanceof List)
                     return idx.itemsArray().forEach(v=>set(v,val));
                 if(val instanceof List)
-                    return idx.itemsArray().forEach((v,i)=>set(idx+i*size,v));
+                    return val.itemsArray().forEach((v,i)=>set(idx+i*size,v));
                 return Atomics.xor(new cls(this._bytes,Number(idx)-1,1),0,Number(val));
             }
             return set(idx,val);
@@ -217,7 +217,7 @@
                 if(idx instanceof List)
                     return idx.itemsArray().forEach(v=>set(v,val));
                 if(val instanceof List)
-                    return idx.itemsArray().forEach(v=>set(idx,v));
+                    return val.itemsArray().forEach(v=>set(idx,v));
                 return method.call(this._view,Number(idx)-1,Number(val),true);
             }
             return set(idx,val);
@@ -239,7 +239,7 @@
                 if(idx instanceof List)
                     return idx.itemsArray().forEach(v=>set(v,val));
                 if(val instanceof List)
-                    return idx.itemsArray().forEach(v=>set(idx,v));
+                    return val.itemsArray().forEach(v=>set(idx,v));
                 return method.call(this._view,Number(idx)-1,Number(val),false);
             }
             return set(idx,val);
@@ -276,7 +276,7 @@
                 if(idx instanceof List)
                     return Promise.allSettled(...idx.map(v=>wait(v,val)).itemsArray());
                 if(val instanceof List)
-                    return Promise.allSettled(...idx.map((v,i)=>wait(idx+i*size,v).itemsArray()));
+                    return Promise.allSettled(...val.map((v,i)=>wait(idx+i*size,v).itemsArray()));
                 return Promise.resolve(Atomics.waitAsync(new cls(this._bytes,Number(idx)-1,1),0,Number(val),timeout));
             }
             return new PromiseWrapper(wait(idx,val));
