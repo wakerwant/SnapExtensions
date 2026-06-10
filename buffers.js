@@ -265,7 +265,7 @@
             }
             let size = Number(type.slice(1))/8;
             let cls = window[{u:"Uint",i:"Int",f:"Float"}[type[0]]+Number(type.slice(1))+"Array"];
-            function wait(idx,val){
+            let wait = (idx,val)=>{
                 if(idx instanceof List && val instanceof List){
                     let maxIdx = Math.min(idx.length(),val.length());
                     let idxA = idx.itemsArray();
