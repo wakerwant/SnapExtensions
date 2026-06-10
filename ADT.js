@@ -27,8 +27,29 @@ if (!window.ADT) {
         proto = new List([
                 new List(["_type", "adt"]),
                 new List(["__do", ADT.__do]),
-                new List(["_morph", parseLisp(`(call (get __do) (this [object]) "toString" (list))`)])
+                new List(["_morph", lisp`(call (get __do) (this [object]) "toString" (list))`])
             ]);
+        static
+        getInputNames(funct){
+            let result = '';
+            let stringified = String(funct);
+            let level = 0;
+            for(let i = 0; i < stringified.length; i++){
+                if(['(','{','['].includes(stringified[i])){
+                    level++;
+                    continue;
+                }
+                if([')','}',']'].includes(stringified[i])){
+                    if(level==1)
+                        break;
+                    level--;
+                    continue;
+                }
+                if(level==1)
+                    result+=stringified[i];
+            }
+            return result.split(',').map(v=>String([...v.matchAll(/[a-zA-Z0-9_]+/g)][0]));
+        }
         static
         init(cls) {
             if (!cls.prototype instanceof this) {
@@ -39,7 +60,11 @@ if (!window.ADT) {
                 this.init(cls.prototype.__proto__.constructor);
             let proto = new List([new List(["...", cls.prototype.__proto__.constructor.proto])])
             for (let k of Object.getOwnPropertyNames(cls.prototype)) {
-                proto.bind(k, parseLisp(`(call (get __do) (this [object]) ${k} (this [inputs]))`));
+                if(typeof cls.prototype[k] !== 'function')
+                    continue;
+                let f = parseLisp(`(call (get __do) (this [object]) ${k} (this [inputs]))`);
+                f.inputs = this.getInputNames(cls.prototype[k]);
+                proto.bind(k, f);
             }
             proto.bind("_type", cls.adtType || cls.name);
             cls.proto = proto;
