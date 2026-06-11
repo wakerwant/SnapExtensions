@@ -1,23 +1,11 @@
 (()=>{
     let pageSize = 65536;
-    class WasmInstance extends ADT{
-        static adtType = 'wasm_instance';
-        /** @type {WebAssembly.Instance} */
-        _inst = null;
-        constructor(inst){
-            super()
-            this._inst=inst;
-        }
-        exports(){
-            return new List(Object.entries(this._inst.exports).map(v=>new List(v)));
-        }
-    }
-    ADT.init(WasmInstance);
     class WasmMemory extends ADT{
         static adtType = 'wasm_memory';
         /** @type {WebAssembly.Memory} */
         _mem = null;
         constructor(opt=new List([])){
+            super();
             if(opt instanceof WebAssembly.Memory){
                 if(opt.wrapper instanceof WasmMemory)
                     return opt.wrapper;
@@ -25,8 +13,12 @@
             }else{
                 this._mem=new WebAssembly.Memory({
                     address:opt.lookup('addressType')||void 0,
-                    maximum:BigInt(opt.lookup('maximum').toString()),
-                    initial:BigInt(opt.lookup('initial').toString()),
+                    maximum:(opt.lookup('addressType')=='i64'?
+                        BigInt(opt.lookup('maximum').toString()):
+                        Number(opt.lookup('maximum')))||void 0,
+                    initial:opt.lookup('addressType')=='i64'?
+                        BigInt(opt.lookup('initial').toString()):
+                        Number(opt.lookup('initial')),
                     shared:!!opt.lookup('shared')
                 });
             }
@@ -36,7 +28,11 @@
             return new Buffer(this._mem.buffer);
         }
         grow(amount){
-            this._mem.grow(BigInt(amount.toString()));
+            try{
+                this._mem.grow(Number(amount));
+            }catch(err){
+                this._mem.grow(BigInt(amount.toString()));
+            }
         }
         toString(){
             return `<wasm_memory with ${this.buffer().byteLength()/pageSize} pages>`
@@ -48,7 +44,7 @@
         /** @type {WebAssembly.Global} */
         _var = null;
         constructor(opt=new List()){
-            super()
+            super();
             if(opt instanceof WebAssembly.Global){
                 if(opt.wrapper instanceof WasmGlobal)
                     return opt.wrapper;
@@ -59,15 +55,18 @@
                         mutable:!!opt.lookup('mutable'),
                         value:opt.lookup('type')
                     },
-                    opt.lookup('type')=='i64'?
-                        BigInt(opt.lookup('value').toString()):
-                        Number(opt.lookup('value'))
+                    opt.lookup('type')=='i64'? BigInt(opt.lookup('value').toString()):
+                    ['i32','f32','f64'].includes(opt.lookup('type'))? Number(opt.lookup('value')):
+                    opt.lookup('type')=='funcref'?wasmObjectFor(opt.lookup('value')):
+                    opt.lookup('value')
                 );
             }
             this._var.wrapper = this;
         }
         get(){
             let result = this._var.value;
+            if(typeof result == 'function' && result.snapContext)
+                return result.snapContext;
             if(typeof result == 'bigint')
                 return BigInteger(result);
             return result;
@@ -75,7 +74,11 @@
         set(val){
             if(val instanceof BigInteger)
                 this._var.value = BigInt(val.toString());
-            this._var.value = Number(val);
+            try{
+                this._var.value = val;
+            }catch(err){
+                this._var.value = wasmObjectFor(val);
+            }
         }
     }
     ADT.init(WasmGlobal);
@@ -84,6 +87,7 @@
         /** @type {WebAssembly.Table} */
         _table = null;
         constructor(opt=new List()){
+            super();
             if(opt instanceof WebAssembly.Table){
                 if(opt.wrapper instanceof WasmTable)
                     return opt.wrapper;
@@ -130,6 +134,7 @@
         /** @type {WebAssembly.Tag} */
         _tag = null;
         constructor(opt=new List()){
+            super();
             if(opt instanceof WebAssembly.Tag){
                 if(opt.wrapper instanceof WasmTag)
                     return opt.wrapper;
@@ -148,6 +153,7 @@
         /** @type {WebAssembly.Exception} */
         _err = null;
         constructor(opt=new List()){
+            super();
             if(opt instanceof WebAssembly.Exception){
                 if(opt.wrapper instanceof WasmError)
                     return opt.wrapper;
@@ -208,13 +214,26 @@
             ));
         }
         instanate(objects=new List()){
-            let dict = Object.fromEntries(options.map(v=>
-                    Object.fromEntries(v.map(v=>v.itemsArray()).itemsArray())
+            let dict = Object.fromEntries(objects.map(v=>
+                    Object.fromEntries(v.map(v=>[v.at(1),wasmObjectFor(v.at(2))]).itemsArray())
                 ).itemsArray());
-            return new PromiseWrapper(WebAssembly.instantiate(this._module,dict).then(v=>new WasmInstance(v.instance)))
+            return new PromiseWrapper(WebAssembly.instantiate(this._module,dict).then(v=>new WasmInstance(v)))
         }
     }
     ADT.init(WasmModule);
+    class WasmInstance extends ADT{
+        static adtType = 'wasm_instance';
+        /** @type {WebAssembly.Instance} */
+        _inst = null;
+        constructor(inst){
+            super()
+            this._inst=inst;
+        }
+        exports(){
+            return new List(Object.entries(this._inst.exports).map(v=>new List([v[0],wasmADTfor(v[1])])));
+        }
+    }
+    ADT.init(WasmInstance);
 
     function wasmObjectFor(obj){
         if(obj instanceof Context){
@@ -244,21 +263,51 @@
             return obj._err;
         return obj;
     }
-    SnapExtensions.primitves.set('wasm_mem(opt)',function(...args){
+    function wasmADTfor(obj){
+        if(obj instanceof WebAssembly.Memory)
+            return new WasmMemory(obj);
+        if(obj instanceof WebAssembly.Global)
+            return new WasmGlobal(obj);
+        if(obj instanceof WebAssembly.Table)
+            return new WasmTable(obj);
+        if(obj instanceof WebAssembly.Tag)
+            return new WasmTag(obj);
+        if(obj instanceof WebAssembly.Exception)
+            return new WasmError(obj);
+        return obj;
+    }
+    SnapExtensions.primitives.set('wasm_mem(opt)',function(...args){
         return new WasmMemory(...args.slice(0,-1));
     })
-    SnapExtensions.primitves.set('wasm_global(opt)',function(...args){
+    SnapExtensions.primitives.set('wasm_global(opt)',function(...args){
         return new WasmGlobal(...args.slice(0,-1));
     })
-    SnapExtensions.primitves.set('wasm_table(opt)',function(...args){
+    SnapExtensions.primitives.set('wasm_table(opt)',function(...args){
         return new WasmTable(...args.slice(0,-1));
     })
-    SnapExtensions.primitves.set('wasm_tag(opt)',function(...args){
+    SnapExtensions.primitives.set('wasm_tag(opt)',function(...args){
         return new WasmTag(...args.slice(0,-1));
     })
-    SnapExtensions.primitves.set('wasm_error(opt)',function(...args){
+    SnapExtensions.primitives.set('wasm_error(opt)',function(...args){
         return new WasmError(...args.slice(0,-1));
     })
+    SnapExtensions.primitives.set('wasm_compile(bytes[,options])',function(...args){
+        let [bytes,opt]=args.slice(0,-1);
+        opt||=new List();
+        return new PromiseWrapper(WebAssembly.compile(
+            bytes instanceof Buffer?
+                bytes._bytes:
+                new Uint8Array(bytes.itemsArray()).buffer,
+            {
+                builtins:opt.lookup('builtins') instanceof List?
+                    opt.lookup('builtins').itemsArray():
+                    [],
+                importedStringConstants:String(opt.lookup('strings')||'')||void 0
+            }
+        ).then(v=>new WasmModule(v)));
+    });
+
+    //modified to support my wasm libary
     Process.prototype.tryCatch = function(action,exception,errVarName){
             var next = this.context.continuation();
 
@@ -280,21 +329,6 @@
 
             this.evaluate(action, new List(), true);
     }
-    SnapExtensions.primitves.set('wasm_compile(bytes[,options])',function(...args){
-        let [bytes,opt]=args.slice(0,-1);
-        opt||=new List();
-        return new PromiseWrapper(WebAssembly.compile(
-            bytes instanceof Buffer?
-                bytes._bytes:
-                new Uint8Array(bytes.itemsArray()).buffer,
-            {
-                builtins:opt.lookup('builtins') instanceof List?
-                    opt.lookup('builtins').itemsArray():
-                    [],
-                importedStringConstants:String(opt.lookup('strings')||'')||void 0
-            }
-        ).then(v=>new WasmModule(v)));
-    });
     window.WasmInstance = WasmInstance;
     window.WasmMemory   = WasmMemory;
     window.WasmGlobal   = WasmGlobal;
@@ -302,4 +336,4 @@
     window.WasmTag      = WasmTag;
     window.WasmError    = WasmError;
     window.WasmModule   = WasmModule;
-})
+})()
